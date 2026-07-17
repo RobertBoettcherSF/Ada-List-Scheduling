@@ -5,6 +5,7 @@ project List_Scheduling is
    
    -- Define where compilation artifacts (.o and .ali) should be placed
    for Object_Dir use "obj";
+   for Exec_Dir use "tests";
    
    package Compiler is
       -- Uses Ada 2012 specification standard and applies level 2 optimization

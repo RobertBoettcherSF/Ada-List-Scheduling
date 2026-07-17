@@ -28,12 +28,14 @@ if [ ! -f "list_scheduling.gpr" ]; then
     exit 1
 fi
 
-# Create object directory if it doesn't exist
+# Create directories if they don't exist
 mkdir -p obj
+mkdir -p tests
 
 # Clean previous builds
 echo "Cleaning previous builds..."
-rm -rf obj/*.o obj/*.ali
+rm -rf obj/*.o obj/*.ali obj/test_list_scheduling obj/test_list_scheduling.exe
+rm -f tests/test_list_scheduling tests/test_list_scheduling.exe
 
 # Compile the project
 echo "Compiling List_Scheduling library..."
@@ -55,10 +57,27 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Check if executable was created
-if [ ! -f "./test_list_scheduling" ] && [ ! -f "./test_list_scheduling.exe" ]; then
+# Check if executable was created in current directory or obj directory
+EXEC_FOUND=0
+if [ -f "./test_list_scheduling" ]; then
+    EXEC_FOUND=1
+elif [ -f "./test_list_scheduling.exe" ]; then
+    EXEC_FOUND=1
+elif [ -f "../obj/test_list_scheduling" ]; then
+    cp ../obj/test_list_scheduling ./
+    EXEC_FOUND=1
+elif [ -f "../obj/test_list_scheduling.exe" ]; then
+    cp ../obj/test_list_scheduling.exe ./
+    EXEC_FOUND=1
+fi
+
+if [ $EXEC_FOUND -eq 0 ]; then
     echo "ERROR: Executable not created. Checking what happened..."
-    ls -la test_list_scheduling* 2>/dev/null || echo "No test_list_scheduling files found"
+    echo "Current directory: $(pwd)"
+    echo "Files in current dir:"
+    ls -la | grep test_list
+    echo "Files in ../obj:"
+    ls -la ../obj/ | grep test_list
     exit 1
 fi
 
