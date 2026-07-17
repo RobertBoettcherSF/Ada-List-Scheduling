@@ -95,8 +95,8 @@ begin
 
    -- Test 1: Empty job list
    declare
-      Empty_Jobs : constant Job_List(1 .. 0);
-      Empty_Durations : constant Job_Duration_Array(1 .. 0);
+      Empty_Jobs : Job_List(1 .. 0);
+      Empty_Durations : Job_Duration_Array(1 .. 0);
       Result : Schedule_List;
    begin
       Result := Basic_List_Scheduling(Empty_Jobs, Empty_Durations, 1);
