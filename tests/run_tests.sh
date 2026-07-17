@@ -37,7 +37,7 @@ rm -rf obj/*.o obj/*.ali
 
 # Compile the project
 echo "Compiling List_Scheduling library..."
-gnatmake -P list_scheduling.gpr 2>&1 | grep -v "^  " | grep -v "^$"
+gnatmake -P list_scheduling.gpr
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Compilation failed."
@@ -48,10 +48,17 @@ echo ""
 echo "Compiling test suite..."
 cd tests
 rm -f test_list_scheduling test_list_scheduling.exe
-gnatmake -P ../list_scheduling.gpr test_list_scheduling.adb 2>&1 | grep -v "^  " | grep -v "^$"
+gnatmake -P ../list_scheduling.gpr test_list_scheduling.adb
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Test compilation failed."
+    exit 1
+fi
+
+# Check if executable was created
+if [ ! -f "./test_list_scheduling" ] && [ ! -f "./test_list_scheduling.exe" ]; then
+    echo "ERROR: Executable not created. Checking what happened..."
+    ls -la test_list_scheduling* 2>/dev/null || echo "No test_list_scheduling files found"
     exit 1
 fi
 

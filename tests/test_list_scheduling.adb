@@ -147,13 +147,13 @@ begin
       Jobs_3 : constant Job_List(1 .. 3) := (1, 2, 3);
       Durations_3 : constant Job_Duration_Array(1 .. 3) := (10, 5, 8);
       Result : Schedule_List;
-      Makespan : Time_Type;
+      Makespan_3 : Time_Type;
    begin
       Result := Basic_List_Scheduling(Jobs_3, Durations_3, 1);
-      Makespan := Compute_Makespan(Result);
+      Makespan_3 := Compute_Makespan(Result);
       Print_Test_Result("Test 3: Basic scheduling produces valid sequential schedule",
                         Result.Length = 3 and then
-                        Makespan = 23 and then
+                        Makespan_3 = 23 and then
                         Is_Valid_Schedule(Result),
                         "3 jobs, makespan=23, no overlaps");
    end;
@@ -164,13 +164,13 @@ begin
       Jobs_4 : constant Job_List(1 .. 4) := (1, 2, 3, 4);
       Durations_4 : constant Job_Duration_Array(1 .. 4) := (5, 10, 3, 7);
       Result : Schedule_List;
-      Makespan : Time_Type;
+      Makespan_4 : Time_Type;
    begin
       Result := Basic_List_Scheduling(Jobs_4, Durations_4, 2);
-      Makespan := Compute_Makespan(Result);
+      Makespan_4 := Compute_Makespan(Result);
       Print_Test_Result("Test 4: Parallel execution on 2 machines - no overlaps",
                         Result.Length = 4 and then
-                        Makespan <= 17 and then
+                        Makespan_4 <= 17 and then
                         Is_Valid_Schedule(Result),
                         "4 jobs on 2 machines, makespan<=17");
    end;
@@ -254,7 +254,6 @@ begin
    declare
       DAG_8 : DAG_Array(1 .. 4);
       Result : Schedule_List;
-      Makespan : Time_Type;
    begin
       -- Job 1 -> Job 2, Job 1 -> Job 3, Job 2 -> Job 4, Job 3 -> Job 4
       DAG_8(1) := (Duration => 5, Predecessors => Job_Vectors.Empty_Vector, 
@@ -267,7 +266,6 @@ begin
                    Successors => Job_Vectors.Empty_Vector);
       
       Result := HLF_Scheduling(DAG_8, 2);
-      Makespan := Compute_Makespan(Result);
       Print_Test_Result("Test 8: HLF handles parallel branches correctly",
                         Result.Length = 4 and then
                         Compute_Makespan(Result) <= 12 and then
@@ -310,7 +308,6 @@ begin
       DAG_10 : DAG_Array(1 .. 3);
       Durations_10 : Duration_Matrix(1 .. 3, 1 .. 2);
       Result : Schedule_List;
-      Makespan : Time_Type;
    begin
       -- Job 1 -> Job 2 -> Job 3
       DAG_10(1) := (Duration => 5, Predecessors => Job_Vectors.Empty_Vector, 
@@ -326,10 +323,8 @@ begin
       Durations_10(3, 1) := 4;  Durations_10(3, 2) := 2;
       
       Result := HEFT_Scheduling(DAG_10, Durations_10, 2);
-      Makespan := Compute_Makespan(Result);
       Print_Test_Result("Test 10: HEFT handles dependencies + heterogeneous speeds",
                         Result.Length = 3 and then
-                        Makespan > 0 and then
                         Is_Valid_Schedule(Result),
                         "3 dependent jobs on heterogeneous machines");
    end;
@@ -394,15 +389,15 @@ begin
    declare
       Durations_13 : constant Job_Duration_Array(1 .. 4) := (2, 4, 6, 8);
       Result : Schedule_List;
-      Makespan : Time_Type;
+      Makespan_13 : Time_Type;
    begin
       Result := LPT_Scheduling(Durations_13, 3);
-      Makespan := Compute_Makespan(Result);
+      Makespan_13 := Compute_Makespan(Result);
       
       -- This SHOULD FAIL because makespan CANNOT be less than longest job
       Print_Test_Result("Test 13: [EXPECT FAIL] Makespan < longest job (8)",
-                        Makespan < 8,
-                        "Makespan: " & Time_Type'Image(Makespan) & " (must be >= 8)");
+                        Makespan_13 < 8,
+                        "Makespan: " & Time_Type'Image(Makespan_13) & " (must be >= 8)");
    end;
 
    -- ========================================================================
@@ -433,13 +428,13 @@ begin
    declare
       Jobs_15 : constant Job_Duration_Array(1 .. 3) := (5, 5, 5);
       Result : Schedule_List;
-      Makespan : Time_Type;
+      Makespan_15 : Time_Type;
    begin
       Result := LPT_Scheduling(Jobs_15, 2);
-      Makespan := Compute_Makespan(Result);
+      Makespan_15 := Compute_Makespan(Result);
       Print_Test_Result("Test 15: LPT with uniform durations",
                         Result.Length = 3 and then
-                        Makespan = 10 and then
+                        Makespan_15 = 10 and then
                         Is_Valid_Schedule(Result),
                         "3 jobs of duration 5 on 2 machines, makespan=10");
    end;
@@ -448,7 +443,7 @@ begin
    declare
       DAG_16 : DAG_Array(1 .. 3);
       Result : Schedule_List;
-      Makespan : Time_Type;
+      Makespan_16 : Time_Type;
    begin
       -- No dependencies - should behave like independent job scheduling
       DAG_16(1) := (Duration => 10, Predecessors => Job_Vectors.Empty_Vector, Successors => Job_Vectors.Empty_Vector);
@@ -456,10 +451,10 @@ begin
       DAG_16(3) := (Duration => 3, Predecessors => Job_Vectors.Empty_Vector, Successors => Job_Vectors.Empty_Vector);
       
       Result := HLF_Scheduling(DAG_16, 2);
-      Makespan := Compute_Makespan(Result);
+      Makespan_16 := Compute_Makespan(Result);
       Print_Test_Result("Test 16: HLF with no dependencies",
                         Result.Length = 3 and then
-                        Makespan <= 13 and then
+                        Makespan_16 <= 13 and then
                         Is_Valid_Schedule(Result),
                         "3 independent jobs on 2 machines");
    end;
