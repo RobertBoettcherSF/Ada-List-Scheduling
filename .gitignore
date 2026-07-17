@@ -1,5 +1,23 @@
-# Object file
+# Object files
 *.o
 
 # Ada Library Information
 *.ali
+
+# Executables
+*.exe
+
+# Test executables
+test_list_scheduling
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+
+# Build artifacts
+build/
+bin/
+
+# Log files
+*.log
