@@ -340,9 +340,10 @@ begin
 
    -- Test 11: FALSE ASSUMPTION - Basic scheduling is always optimal
    -- We PROVE this FALSE by showing LPT can produce better makespan
+   -- Use a case where Basic gives worse result: jobs ordered (1, 1, 1, 10) on 2 machines
    declare
-      Jobs_11 : constant Job_List(1 .. 3) := (1, 2, 3);
-      Durations_11 : constant Job_Duration_Array(1 .. 3) := (10, 1, 1);
+      Jobs_11 : constant Job_List(1 .. 4) := (1, 2, 3, 4);
+      Durations_11 : constant Job_Duration_Array(1 .. 4) := (1, 1, 1, 10);
       Result_Basic : Schedule_List;
       Result_LPT : Schedule_List;
       Makespan_Basic : Time_Type;
@@ -354,11 +355,13 @@ begin
       Makespan_LPT := Compute_Makespan(Result_LPT);
       
       -- This SHOULD FAIL because Basic scheduling is NOT always optimal
+      -- Basic will schedule job 10 last, giving makespan=10
+      -- LPT will schedule job 10 first, giving makespan=5
       Print_Test_Result("Test 11: [EXPECT FAIL] Basic is always optimal",
                         Makespan_Basic <= Makespan_LPT,
                         "Basic: " & Time_Type'Image(Makespan_Basic) & 
                         ", LPT: " & Time_Type'Image(Makespan_LPT) & 
-                        " (LPT should be better)");
+                        " (LPT should be better, e.g., 5 vs 10)");
    end;
 
    -- Test 12: FALSE ASSUMPTION - LPT with 1 machine differs from Basic
@@ -471,7 +474,7 @@ begin
    Put("Failed: "); Put_Line(Natural'Image(Failed_Tests));
    New_Line;
    Put_Line("Expected failures (proving false assumptions):");
-   Put_Line("  - Test 11: Basic scheduling is NOT always optimal");
+   Put_Line("  - Test 11: Basic scheduling is NOT always optimal (LPT better)");
    Put_Line("  - Test 12: LPT and Basic are EQUAL on 1 machine");
    Put_Line("  - Test 13: Makespan CANNOT be less than longest job");
    New_Line;
