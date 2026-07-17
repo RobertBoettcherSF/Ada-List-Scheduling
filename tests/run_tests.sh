@@ -22,7 +22,7 @@ fi
 cd "$PROJECT_ROOT"
 
 # Check if we're in the right directory
-if [ ! -f "src/list_scheduling.gpr" ]; then
+if [ ! -f "list_scheduling.gpr" ]; then
     echo "ERROR: Not in the project root directory."
     echo "Project root: $PROJECT_ROOT"
     exit 1
@@ -37,7 +37,7 @@ rm -rf obj/*.o obj/*.ali
 
 # Compile the project
 echo "Compiling List_Scheduling library..."
-gnatmake -P src/list_scheduling.gpr 2>&1 | grep -v "^  " | grep -v "^$"
+gnatmake -P list_scheduling.gpr 2>&1 | grep -v "^  " | grep -v "^$"
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Compilation failed."
@@ -47,7 +47,7 @@ fi
 echo ""
 echo "Compiling test suite..."
 cd tests
-gnatmake -P ../src/list_scheduling.gpr test_list_scheduling.adb 2>&1 | grep -v "^  " | grep -v "^$"
+gnatmake -P ../list_scheduling.gpr test_list_scheduling.adb 2>&1 | grep -v "^  " | grep -v "^$"
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Test compilation failed."
