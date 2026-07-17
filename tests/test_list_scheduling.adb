@@ -72,9 +72,10 @@ procedure Test_List_Scheduling is
       for Mach in Machine_ID range 1 .. 100 loop
          declare
             Mach_Schedule : constant Schedule_List := Machine_Schedules(Mach);
+            Mach_Len : constant Count_Type := Mach_Schedule.Length;
          begin
-            for I in 1 .. Count_Type(Mach_Schedule.Length) - 1 loop
-               for J in I + 1 .. Count_Type(Mach_Schedule.Length) loop
+            for I in 1 .. Integer(Mach_Len) - 1 loop
+               for J in I + 1 .. Integer(Mach_Len) loop
                   declare
                      Job_I : constant Job_Schedule := Mach_Schedule.Element(I);
                      Job_J : constant Job_Schedule := Mach_Schedule.Element(J);
