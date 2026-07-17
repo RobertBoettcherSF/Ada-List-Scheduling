@@ -37,7 +37,7 @@ rm -rf obj/*.o obj/*.ali
 
 # Compile the project
 echo "Compiling List_Scheduling library..."
-gnatmake -P list_scheduling.gpr 2>&1 | grep -v "^  " | grep -v "^$"
+gnatmake -P list_scheduling.gpr 2>&1 | grep -v "^  " | grep -v "^$" | grep -v "warning:"
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Compilation failed."
@@ -47,7 +47,8 @@ fi
 echo ""
 echo "Compiling test suite..."
 cd tests
-gnatmake -P ../list_scheduling.gpr test_list_scheduling.adb 2>&1 | grep -v "^  " | grep -v "^$"
+rm -f test_list_scheduling
+gnatmake -P ../list_scheduling.gpr test_list_scheduling.adb 2>&1 | grep -v "^  " | grep -v "^$" | grep -v "warning:"
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Test compilation failed."

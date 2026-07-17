@@ -1,5 +1,4 @@
 with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Integer_Text_IO; use Ada.Integer_Text_IO;
 with Ada.Containers; use Ada.Containers;
 with List_Scheduling; use List_Scheduling;
 
@@ -34,27 +33,6 @@ procedure Test_List_Scheduling is
       end loop;
       return Max_End;
    end Compute_Makespan;
-
-   -- Helper function to check if all jobs are scheduled
-   function All_Jobs_Scheduled (Schedule : Schedule_List; Expected_Jobs : Job_List) return Boolean is
-      Scheduled_Count : array (Expected_Jobs'Range) of Boolean := (others => False);
-   begin
-      for Item of Schedule loop
-         for I in Expected_Jobs'Range loop
-            if Expected_Jobs(I) = Item.Job then
-               Scheduled_Count(I) := True;
-               exit;
-            end if;
-         end loop;
-      end loop;
-      
-      for I in Expected_Jobs'Range loop
-         if not Scheduled_Count(I) then
-            return False;
-         end if;
-      end loop;
-      return True;
-   end All_Jobs_Scheduled;
 
    -- Helper function to check if schedule is valid (no overlapping on same machine)
    function Is_Valid_Schedule (Schedule : Schedule_List) return Boolean is
@@ -117,8 +95,8 @@ begin
 
    -- Test 1: Empty job list
    declare
-      Empty_Jobs : Job_List(1 .. 0);
-      Empty_Durations : Job_Duration_Array(1 .. 0);
+      Empty_Jobs : constant Job_List(1 .. 0);
+      Empty_Durations : constant Job_Duration_Array(1 .. 0);
       Result : Schedule_List;
    begin
       Result := Basic_List_Scheduling(Empty_Jobs, Empty_Durations, 1);
@@ -128,8 +106,8 @@ begin
 
    -- Test 2: Single job, single machine
    declare
-      Single_Job : Job_List(1 .. 1) := (1 => 1);
-      Single_Duration : Job_Duration_Array(1 .. 1) := (1 => 10);
+      Single_Job : constant Job_List(1 .. 1) := (1 => 1);
+      Single_Duration : constant Job_Duration_Array(1 .. 1) := (1 => 10);
       Result : Schedule_List;
    begin
       Result := Basic_List_Scheduling(Single_Job, Single_Duration, 1);
@@ -142,8 +120,8 @@ begin
 
    -- Test 3: Multiple jobs, single machine (sequential execution)
    declare
-      Jobs_3 : Job_List(1 .. 3) := (1, 2, 3);
-      Durations_3 : Job_Duration_Array(1 .. 3) := (10, 5, 8);
+      Jobs_3 : constant Job_List(1 .. 3) := (1, 2, 3);
+      Durations_3 : constant Job_Duration_Array(1 .. 3) := (10, 5, 8);
       Result : Schedule_List;
       Makespan : Time_Type;
    begin
@@ -157,8 +135,8 @@ begin
 
    -- Test 4: Multiple jobs, multiple machines (parallel execution)
    declare
-      Jobs_4 : Job_List(1 .. 4) := (1, 2, 3, 4);
-      Durations_4 : Job_Duration_Array(1 .. 4) := (5, 10, 3, 7);
+      Jobs_4 : constant Job_List(1 .. 4) := (1, 2, 3, 4);
+      Durations_4 : constant Job_Duration_Array(1 .. 4) := (5, 10, 3, 7);
       Result : Schedule_List;
       Makespan : Time_Type;
    begin
@@ -177,7 +155,7 @@ begin
 
    -- Test 5: LPT with uniform durations (should behave like basic)
    declare
-      Jobs_5 : Job_Duration_Array(1 .. 3) := (5, 5, 5);
+      Jobs_5 : constant Job_Duration_Array(1 .. 3) := (5, 5, 5);
       Result : Schedule_List;
       Makespan : Time_Type;
    begin
@@ -191,10 +169,10 @@ begin
 
    -- Test 6: LPT should outperform basic scheduling for certain cases
    declare
-      Jobs_6 : Job_Duration_Array(1 .. 4) := (10, 1, 1, 1);
+      Jobs_6 : constant Job_Duration_Array(1 .. 4) := (10, 1, 1, 1);
       Result_LPT : Schedule_List;
       Result_Basic : Schedule_List;
-      Jobs_List : Job_List(1 .. 4) := (1, 2, 3, 4);
+      Jobs_List : constant Job_List(1 .. 4) := (1, 2, 3, 4);
       Makespan_LPT : Time_Type;
       Makespan_Basic : Time_Type;
    begin
@@ -208,7 +186,7 @@ begin
 
    -- Test 7: LPT with single machine (should be sequential)
    declare
-      Jobs_7 : Job_Duration_Array(1 .. 5) := (3, 1, 4, 1, 5);
+      Jobs_7 : constant Job_Duration_Array(1 .. 5) := (3, 1, 4, 1, 5);
       Result : Schedule_List;
       Makespan : Time_Type;
    begin
@@ -349,8 +327,8 @@ begin
 
    -- Test 13: Assumption - Basic scheduling assigns to available machine
    declare
-      Jobs_13 : Job_List(1 .. 2) := (1, 2);
-      Durations_13 : Job_Duration_Array(1 .. 2) := (5, 3);
+      Jobs_13 : constant Job_List(1 .. 2) := (1, 2);
+      Durations_13 : constant Job_Duration_Array(1 .. 2) := (5, 3);
       Result : Schedule_List;
    begin
       Result := Basic_List_Scheduling(Jobs_13, Durations_13, 2);
@@ -363,7 +341,7 @@ begin
 
    -- Test 14: Assumption - LPT sorts by descending duration
    declare
-      Durations_14 : Job_Duration_Array(1 .. 3) := (1, 5, 3);
+      Durations_14 : constant Job_Duration_Array(1 .. 3) := (1, 5, 3);
       Result : Schedule_List;
    begin
       Result := LPT_Scheduling(Durations_14, 1);
@@ -423,8 +401,8 @@ begin
 
    -- Test 17: Assumption - All algorithms produce valid schedules
    declare
-      Jobs_17 : Job_List(1 .. 5) := (1, 2, 3, 4, 5);
-      Durations_17 : Job_Duration_Array(1 .. 5) := (2, 4, 6, 8, 10);
+      Jobs_17 : constant Job_List(1 .. 5) := (1, 2, 3, 4, 5);
+      Durations_17 : constant Job_Duration_Array(1 .. 5) := (2, 4, 6, 8, 10);
       Result_Basic : Schedule_List;
       Result_LPT : Schedule_List;
    begin
@@ -438,8 +416,7 @@ begin
 
    -- Test 18: Assumption - Makespan is at least the longest job
    declare
-      Jobs_18 : Job_List(1 .. 4) := (1, 2, 3, 4);
-      Durations_18 : Job_Duration_Array(1 .. 4) := (2, 4, 6, 8);
+      Durations_18 : constant Job_Duration_Array(1 .. 4) := (2, 4, 6, 8);
       Result : Schedule_List;
       Makespan : Time_Type;
    begin
@@ -456,8 +433,8 @@ begin
 
    -- Test 19: False assumption - Basic scheduling is always optimal
    declare
-      Jobs_19 : Job_List(1 .. 3) := (1, 2, 3);
-      Durations_19 : Job_Duration_Array(1 .. 3) := (10, 1, 1);
+      Jobs_19 : constant Job_List(1 .. 3) := (1, 2, 3);
+      Durations_19 : constant Job_Duration_Array(1 .. 3) := (10, 1, 1);
       Result_Basic : Schedule_List;
       Result_LPT : Schedule_List;
       Makespan_Basic : Time_Type;
@@ -474,8 +451,8 @@ begin
 
    -- Test 20: False assumption - LPT with 1 machine is different from basic
    declare
-      Jobs_20 : Job_List(1 .. 3) := (1, 2, 3);
-      Durations_20 : Job_Duration_Array(1 .. 3) := (5, 3, 7);
+      Jobs_20 : constant Job_List(1 .. 3) := (1, 2, 3);
+      Durations_20 : constant Job_Duration_Array(1 .. 3) := (5, 3, 7);
       Result_Basic : Schedule_List;
       Result_LPT : Schedule_List;
       Makespan_Basic : Time_Type;
