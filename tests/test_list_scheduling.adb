@@ -1,5 +1,6 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Integer_Text_IO; use Ada.Integer_Text_IO;
+with Ada.Containers; use Ada.Containers;
 with List_Scheduling; use List_Scheduling;
 
 procedure Test_List_Scheduling is
@@ -70,10 +71,10 @@ procedure Test_List_Scheduling is
       -- Check each machine for overlaps
       for Mach in Machine_ID range 1 .. 100 loop
          declare
-            Mach_Schedule : Schedule_List := Machine_Schedules(Mach);
+            Mach_Schedule : constant Schedule_List := Machine_Schedules(Mach);
          begin
-            for I in 1 .. Natural(Mach_Schedule.Length) - 1 loop
-               for J in I + 1 .. Natural(Mach_Schedule.Length) loop
+            for I in 1 .. Count_Type(Mach_Schedule.Length) - 1 loop
+               for J in I + 1 .. Count_Type(Mach_Schedule.Length) loop
                   declare
                      Job_I : constant Job_Schedule := Mach_Schedule.Element(I);
                      Job_J : constant Job_Schedule := Mach_Schedule.Element(J);
@@ -90,6 +91,16 @@ procedure Test_List_Scheduling is
       
       return True;
    end Is_Valid_Schedule;
+
+   -- Helper to create a Job_Vectors.Vector from a list of Job_IDs
+   function Create_Job_Vector (Jobs : Job_List) return Job_Vectors.Vector is
+      Result : Job_Vectors.Vector;
+   begin
+      for J of Jobs loop
+         Result.Append(J);
+      end loop;
+      return Result;
+   end Create_Job_Vector;
 
 begin
    New_Line;
@@ -215,14 +226,16 @@ begin
 
    -- Test 8: Simple DAG with dependencies
    declare
-      type Job_ID_Array is array (Positive range <>) of Job_ID;
       DAG_8 : DAG_Array(1 .. 3);
       Result : Schedule_List;
    begin
       -- Job 1 -> Job 2 -> Job 3 (chain)
-      DAG_8(1) := (Duration => 5, Predecessors => Job_Vectors.Empty_Vector, Successors => Job_Vectors.To_Vector(Job_ID_Array'(2)));
-      DAG_8(2) := (Duration => 3, Predecessors => Job_Vectors.To_Vector(Job_ID_Array'(1)), Successors => Job_Vectors.To_Vector(Job_ID_Array'(3)));
-      DAG_8(3) := (Duration => 2, Predecessors => Job_Vectors.To_Vector(Job_ID_Array'(2)), Successors => Job_Vectors.Empty_Vector);
+      DAG_8(1) := (Duration => 5, Predecessors => Job_Vectors.Empty_Vector, 
+                   Successors => Create_Job_Vector((1 => 2)));
+      DAG_8(2) := (Duration => 3, Predecessors => Create_Job_Vector((1 => 1)), 
+                   Successors => Create_Job_Vector((1 => 3)));
+      DAG_8(3) := (Duration => 2, Predecessors => Create_Job_Vector((1 => 2)), 
+                   Successors => Job_Vectors.Empty_Vector);
       
       Result := HLF_Scheduling(DAG_8, 1);
       Print_Test_Result("Test 8: HLF with simple chain DAG (1 machine)",
@@ -238,12 +251,12 @@ begin
    begin
       -- Job 1 -> Job 2, Job 1 -> Job 3, Job 2 -> Job 4, Job 3 -> Job 4
       DAG_9(1) := (Duration => 5, Predecessors => Job_Vectors.Empty_Vector, 
-                   Successors => Job_Vectors.To_Vector(Job_ID_Array'(2, 3)));
-      DAG_9(2) := (Duration => 3, Predecessors => Job_Vectors.To_Vector(Job_ID_Array'(1)), 
-                   Successors => Job_Vectors.To_Vector(Job_ID_Array'(4)));
-      DAG_9(3) := (Duration => 4, Predecessors => Job_Vectors.To_Vector(Job_ID_Array'(1)), 
-                   Successors => Job_Vectors.To_Vector(Job_ID_Array'(4)));
-      DAG_9(4) := (Duration => 2, Predecessors => Job_Vectors.To_Vector(Job_ID_Array'(2, 3)), 
+                   Successors => Create_Job_Vector((1 => 2, 2 => 3)));
+      DAG_9(2) := (Duration => 3, Predecessors => Create_Job_Vector((1 => 1)), 
+                   Successors => Create_Job_Vector((1 => 4)));
+      DAG_9(3) := (Duration => 4, Predecessors => Create_Job_Vector((1 => 1)), 
+                   Successors => Create_Job_Vector((1 => 4)));
+      DAG_9(4) := (Duration => 2, Predecessors => Create_Job_Vector((1 => 2, 2 => 3)), 
                    Successors => Job_Vectors.Empty_Vector);
       
       Result := HLF_Scheduling(DAG_9, 2);
@@ -294,7 +307,7 @@ begin
       Durations_11(2, 1) := 3;
       Durations_11(2, 2) := 6;
       
-      Result := HEFT_Scheduling(DAG_11, 2);
+      Result := HEFT_Scheduling(DAG_11, Durations_11, 2);
       Print_Test_Result("Test 11: HEFT with heterogeneous durations",
                         Result.Length = 2 and then
                         Is_Valid_Schedule(Result));
@@ -309,10 +322,10 @@ begin
    begin
       -- Job 1 -> Job 2 -> Job 3
       DAG_12(1) := (Duration => 5, Predecessors => Job_Vectors.Empty_Vector, 
-                    Successors => Job_Vectors.To_Vector(Job_ID_Array'(2)));
-      DAG_12(2) := (Duration => 3, Predecessors => Job_Vectors.To_Vector(Job_ID_Array'(1)), 
-                    Successors => Job_Vectors.To_Vector(Job_ID_Array'(3)));
-      DAG_12(3) := (Duration => 2, Predecessors => Job_Vectors.To_Vector(Job_ID_Array'(2)), 
+                    Successors => Create_Job_Vector((1 => 2)));
+      DAG_12(2) := (Duration => 3, Predecessors => Create_Job_Vector((1 => 1)), 
+                    Successors => Create_Job_Vector((1 => 3)));
+      DAG_12(3) := (Duration => 2, Predecessors => Create_Job_Vector((1 => 2)), 
                     Successors => Job_Vectors.Empty_Vector);
       
       -- Heterogeneous durations
@@ -320,7 +333,7 @@ begin
       Durations_12(2, 1) := 6;  Durations_12(2, 2) := 3;
       Durations_12(3, 1) := 4;  Durations_12(3, 2) := 2;
       
-      Result := HEFT_Scheduling(DAG_12, 2);
+      Result := HEFT_Scheduling(DAG_12, Durations_12, 2);
       Makespan := Compute_Makespan(Result);
       Print_Test_Result("Test 12: HEFT with dependencies and heterogeneous durations",
                         Result.Length = 3 and then
@@ -334,14 +347,12 @@ begin
    Put_Line("--- Edge Cases and Assumption Tests ---");
 
    -- Test 13: Assumption - Basic scheduling assigns to available machine
-   -- This tests that jobs are assigned to the machine that becomes available first
    declare
       Jobs_13 : Job_List(1 .. 2) := (1, 2);
       Durations_13 : Job_Duration_Array(1 .. 2) := (5, 3);
       Result : Schedule_List;
    begin
       Result := Basic_List_Scheduling(Jobs_13, Durations_13, 2);
-      -- First job should go to machine 1, second to machine 2 (both available at time 0)
       Print_Test_Result("Test 13: Basic scheduling assigns to first available machine",
                         Result.Length = 2 and then
                         (Result.Element(1).Machine = 1 or Result.Element(1).Machine = 2) and then
@@ -350,13 +361,11 @@ begin
    end;
 
    -- Test 14: Assumption - LPT sorts by descending duration
-   -- This tests that LPT actually sorts jobs by duration
    declare
       Durations_14 : Job_Duration_Array(1 .. 3) := (1, 5, 3);
       Result : Schedule_List;
    begin
       Result := LPT_Scheduling(Durations_14, 1);
-      -- Jobs should be ordered: 2 (5), 3 (3), 1 (1)
       Print_Test_Result("Test 14: LPT sorts jobs by descending duration",
                         Result.Length = 3 and then
                         Result.Element(1).Job = 2 and then
@@ -365,7 +374,6 @@ begin
    end;
 
    -- Test 15: Assumption - HLF respects dependencies
-   -- This tests that HLF doesn't schedule a job before its predecessors
    declare
       DAG_15 : DAG_Array(1 .. 2);
       Result : Schedule_List;
@@ -374,8 +382,8 @@ begin
    begin
       -- Job 1 -> Job 2
       DAG_15(1) := (Duration => 10, Predecessors => Job_Vectors.Empty_Vector, 
-                    Successors => Job_Vectors.To_Vector(Job_ID_Array'(2)));
-      DAG_15(2) := (Duration => 5, Predecessors => Job_Vectors.To_Vector(Job_ID_Array'(1)), 
+                    Successors => Create_Job_Vector((1 => 2)));
+      DAG_15(2) := (Duration => 5, Predecessors => Create_Job_Vector((1 => 1)), 
                     Successors => Job_Vectors.Empty_Vector);
       
       Result := HLF_Scheduling(DAG_15, 2);
@@ -394,7 +402,6 @@ begin
    end;
 
    -- Test 16: Assumption - HEFT chooses fastest machine
-   -- This tests that HEFT assigns jobs to the machine where they finish earliest
    declare
       DAG_16 : DAG_Array(1 .. 1);
       Durations_16 : Duration_Matrix(1 .. 1, 1 .. 2);
@@ -406,8 +413,7 @@ begin
       Durations_16(1, 1) := 10;
       Durations_16(1, 2) := 5;
       
-      Result := HEFT_Scheduling(DAG_16, 2);
-      -- Should choose machine 2 (faster)
+      Result := HEFT_Scheduling(DAG_16, Durations_16, 2);
       Print_Test_Result("Test 16: HEFT chooses fastest machine for job",
                         Result.Length = 1 and then
                         Result.First_Element.Machine = 2 and then
@@ -415,7 +421,6 @@ begin
    end;
 
    -- Test 17: Assumption - All algorithms produce valid schedules
-   -- This tests that all algorithms produce schedules without overlaps
    declare
       Jobs_17 : Job_List(1 .. 5) := (1, 2, 3, 4, 5);
       Durations_17 : Job_Duration_Array(1 .. 5) := (2, 4, 6, 8, 10);
@@ -431,7 +436,6 @@ begin
    end;
 
    -- Test 18: Assumption - Makespan is at least the longest job
-   -- This tests that no schedule can be better than the longest single job
    declare
       Jobs_18 : Job_List(1 .. 4) := (1, 2, 3, 4);
       Durations_18 : Job_Duration_Array(1 .. 4) := (2, 4, 6, 8);
@@ -440,7 +444,6 @@ begin
    begin
       Result := LPT_Scheduling(Durations_18, 3);
       Makespan := Compute_Makespan(Result);
-      -- Makespan should be at least 8 (the longest job)
       Print_Test_Result("Test 18: Makespan is at least the longest job duration",
                         Makespan >= 8);
    end;
@@ -451,7 +454,6 @@ begin
    Put_Line("--- Negative Tests (To be Proven False) ---");
 
    -- Test 19: False assumption - Basic scheduling is always optimal
-   -- This should FAIL because basic scheduling doesn't sort by duration
    declare
       Jobs_19 : Job_List(1 .. 3) := (1, 2, 3);
       Durations_19 : Job_Duration_Array(1 .. 3) := (10, 1, 1);
@@ -465,13 +467,11 @@ begin
       Makespan_Basic := Compute_Makespan(Result_Basic);
       Makespan_LPT := Compute_Makespan(Result_LPT);
       
-      -- This assumption is FALSE: Basic scheduling is NOT always optimal
       Print_Test_Result("Test 19: FALSE - Basic scheduling is always optimal",
                         Makespan_Basic <= Makespan_LPT);
    end;
 
    -- Test 20: False assumption - LPT with 1 machine is different from basic
-   -- This should FAIL because with 1 machine, both should give same result
    declare
       Jobs_20 : Job_List(1 .. 3) := (1, 2, 3);
       Durations_20 : Job_Duration_Array(1 .. 3) := (5, 3, 7);
@@ -485,7 +485,6 @@ begin
       Makespan_Basic := Compute_Makespan(Result_Basic);
       Makespan_LPT := Compute_Makespan(Result_LPT);
       
-      -- This assumption is FALSE: With 1 machine, both should have same makespan
       Print_Test_Result("Test 20: FALSE - LPT with 1 machine differs from basic",
                         Makespan_Basic /= Makespan_LPT);
    end;
