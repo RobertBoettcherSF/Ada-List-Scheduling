@@ -37,7 +37,7 @@ rm -rf obj/*.o obj/*.ali
 
 # Compile the project
 echo "Compiling List_Scheduling library..."
-gnatmake -P list_scheduling.gpr 2>&1 | grep -v "^  " | grep -v "^$" | grep -v "warning:"
+gnatmake -P list_scheduling.gpr 2>&1 | grep -v "^  " | grep -v "^$"
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Compilation failed."
@@ -47,8 +47,8 @@ fi
 echo ""
 echo "Compiling test suite..."
 cd tests
-rm -f test_list_scheduling
-gnatmake -P ../list_scheduling.gpr test_list_scheduling.adb 2>&1 | grep -v "^  " | grep -v "^$" | grep -v "warning:"
+rm -f test_list_scheduling test_list_scheduling.exe
+gnatmake -P ../list_scheduling.gpr test_list_scheduling.adb 2>&1 | grep -v "^  " | grep -v "^$"
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Test compilation failed."
@@ -58,11 +58,19 @@ fi
 echo ""
 echo "Running tests..."
 echo "=========================================="
-./test_list_scheduling
+echo ""
 
-# Clean up
-# rm -f test_list_scheduling
-# rm -f ../obj/*.o ../obj/*.ali
+# Run the tests
+if [ -f "./test_list_scheduling" ]; then
+    ./test_list_scheduling
+elif [ -f "./test_list_scheduling.exe" ]; then
+    ./test_list_scheduling.exe
+else
+    echo "ERROR: test_list_scheduling executable not found!"
+    exit 1
+fi
 
 echo ""
+echo "=========================================="
 echo "Test run complete."
+echo "=========================================="

@@ -9,16 +9,22 @@ procedure Test_List_Scheduling is
    Passed_Tests : Natural := 0;
    Failed_Tests : Natural := 0;
 
-   -- Helper procedure to print test results
-   procedure Print_Test_Result (Test_Name : String; Passed : Boolean) is
+   -- Helper procedure to print test results with details
+   procedure Print_Test_Result (Test_Name : String; Passed : Boolean; Details : String := "") is
    begin
       Total_Tests := Total_Tests + 1;
       if Passed then
          Passed_Tests := Passed_Tests + 1;
          Put_Line("[PASS] " & Test_Name);
+         if Details'Length > 0 then
+            Put_Line("        " & Details);
+         end if;
       else
          Failed_Tests := Failed_Tests + 1;
          Put_Line("[FAIL] " & Test_Name);
+         if Details'Length > 0 then
+            Put_Line("        Expected: " & Details);
+         end if;
       end if;
    end Print_Test_Result;
 
@@ -83,9 +89,10 @@ procedure Test_List_Scheduling is
 
 begin
    New_Line;
-   Put_Line("========================================");
+   Put_Line("========================================================================");
    Put_Line("  List Scheduling Algorithm Test Suite");
-   Put_Line("========================================");
+   Put_Line("  Testing assumptions about code behavior");
+   Put_Line("========================================================================");
    New_Line;
 
    -- ========================================================================
@@ -93,6 +100,8 @@ begin
    -- These tests verify the code handles edge cases correctly
    -- ========================================================================
    Put_Line("--- Category 1: Code Does Nothing (Edge Cases) ---");
+   Put_Line("Testing: Code handles minimal/empty inputs gracefully");
+   New_Line;
 
    -- Test 1: ASSUMPTION - With empty input, code does nothing
    -- PROVING: Code correctly handles empty job lists without crashing
@@ -102,8 +111,9 @@ begin
       Result : Schedule_List;
    begin
       Result := Basic_List_Scheduling(Empty_Jobs, Empty_Durations, 1);
-      Print_Test_Result("Test 1: Empty input - code handles gracefully (not crashing)", 
-                        Result.Length = 0);
+      Print_Test_Result("Test 1: Empty job list handled gracefully", 
+                        Result.Length = 0,
+                        "Schedule is empty");
    end;
 
    -- Test 2: ASSUMPTION - With single job, code does minimal work
@@ -114,18 +124,22 @@ begin
       Result : Schedule_List;
    begin
       Result := Basic_List_Scheduling(Single_Job, Single_Duration, 1);
-      Print_Test_Result("Test 2: Single job - code produces valid single-job schedule",
+      Print_Test_Result("Test 2: Single job scheduled correctly",
                         Result.Length = 1 and then 
                         Result.First_Element.Job = 1 and then
                         Result.First_Element.Start_Time = 0 and then
-                        Result.First_Element.End_Time = 10);
+                        Result.First_Element.End_Time = 10,
+                        "Job 1 on machine 1, time 0-10");
    end;
 
    -- ========================================================================
    -- CATEGORY 2: Assumptions that code does it WRONG (Correctness Tests)
    -- These tests verify the code produces correct/optimal results
    -- ========================================================================
-   Put_Line("--- Category 2: Code Does It Wrong (Correctness) ---");
+   New_Line;
+   Put_Line("--- Category 2: Code Does It Right (Correctness) ---");
+   Put_Line("Testing: Code produces correct, valid schedules");
+   New_Line;
 
    -- Test 3: ASSUMPTION - Basic scheduling might produce invalid schedules
    -- PROVING FALSE: Basic scheduling produces valid schedules (no overlaps)
@@ -137,10 +151,11 @@ begin
    begin
       Result := Basic_List_Scheduling(Jobs_3, Durations_3, 1);
       Makespan := Compute_Makespan(Result);
-      Print_Test_Result("Test 3: Basic scheduling produces VALID schedule (proving it doesn't do it wrong)",
+      Print_Test_Result("Test 3: Basic scheduling produces valid sequential schedule",
                         Result.Length = 3 and then
                         Makespan = 23 and then
-                        Is_Valid_Schedule(Result));
+                        Is_Valid_Schedule(Result),
+                        "3 jobs, makespan=23, no overlaps");
    end;
 
    -- Test 4: ASSUMPTION - Parallel execution might overlap jobs on same machine
@@ -153,10 +168,11 @@ begin
    begin
       Result := Basic_List_Scheduling(Jobs_4, Durations_4, 2);
       Makespan := Compute_Makespan(Result);
-      Print_Test_Result("Test 4: Parallel execution - NO overlaps on same machine (proving correct)",
+      Print_Test_Result("Test 4: Parallel execution on 2 machines - no overlaps",
                         Result.Length = 4 and then
                         Makespan <= 17 and then
-                        Is_Valid_Schedule(Result));
+                        Is_Valid_Schedule(Result),
+                        "4 jobs on 2 machines, makespan<=17");
    end;
 
    -- Test 5: ASSUMPTION - LPT might not sort correctly
@@ -166,11 +182,12 @@ begin
       Result : Schedule_List;
    begin
       Result := LPT_Scheduling(Durations_5, 1);
-      Print_Test_Result("Test 5: LPT sorts correctly - longest first (5, 3, 1)",
+      Print_Test_Result("Test 5: LPT sorts by descending duration (5, 3, 1)",
                         Result.Length = 3 and then
-                        Result.Element(1).Job = 2 and then  -- Job 2 has duration 5
-                        Result.Element(2).Job = 3 and then  -- Job 3 has duration 3
-                        Result.Element(3).Job = 1);         -- Job 1 has duration 1
+                        Result.Element(1).Job = 2 and then
+                        Result.Element(2).Job = 3 and then
+                        Result.Element(3).Job = 1,
+                        "Order: Job2(5), Job3(3), Job1(1)");
    end;
 
    -- Test 6: ASSUMPTION - LPT might not outperform basic scheduling
@@ -187,14 +204,19 @@ begin
       Result_Basic := Basic_List_Scheduling(Jobs_List, Jobs_6, 2);
       Makespan_LPT := Compute_Makespan(Result_LPT);
       Makespan_Basic := Compute_Makespan(Result_Basic);
-      Print_Test_Result("Test 6: LPT <= Basic makespan (proving LPT doesn't do it wrong)",
-                        Makespan_LPT <= Makespan_Basic);
+      Print_Test_Result("Test 6: LPT makespan <= Basic makespan",
+                        Makespan_LPT <= Makespan_Basic,
+                        "LPT: " & Time_Type'Image(Makespan_LPT) & 
+                        ", Basic: " & Time_Type'Image(Makespan_Basic));
    end;
 
    -- ========================================================================
    -- CATEGORY 3: Assumptions about Dependencies (DAG Tests)
    -- ========================================================================
-   Put_Line("--- Category 3: Dependency Handling ---");
+   New_Line;
+   Put_Line("--- Category 3: Dependency Handling (DAG) ---");
+   Put_Line("Testing: Code respects precedence constraints");
+   New_Line;
 
    -- Test 7: ASSUMPTION - HLF might ignore dependencies
    -- PROVING FALSE: HLF respects precedence constraints
@@ -221,8 +243,10 @@ begin
          end if;
       end loop;
       
-      Print_Test_Result("Test 7: HLF respects dependencies - job 2 starts AFTER job 1 ends",
-                        Job2_Start >= Job1_End);
+      Print_Test_Result("Test 7: HLF respects dependencies (Job2 starts after Job1)",
+                        Job2_Start >= Job1_End,
+                        "Job1 ends at " & Time_Type'Image(Job1_End) & 
+                        ", Job2 starts at " & Time_Type'Image(Job2_Start));
    end;
 
    -- Test 8: ASSUMPTION - HLF might not handle complex DAGs
@@ -230,6 +254,7 @@ begin
    declare
       DAG_8 : DAG_Array(1 .. 4);
       Result : Schedule_List;
+      Makespan : Time_Type;
    begin
       -- Job 1 -> Job 2, Job 1 -> Job 3, Job 2 -> Job 4, Job 3 -> Job 4
       DAG_8(1) := (Duration => 5, Predecessors => Job_Vectors.Empty_Vector, 
@@ -242,16 +267,21 @@ begin
                    Successors => Job_Vectors.Empty_Vector);
       
       Result := HLF_Scheduling(DAG_8, 2);
+      Makespan := Compute_Makespan(Result);
       Print_Test_Result("Test 8: HLF handles parallel branches correctly",
                         Result.Length = 4 and then
                         Compute_Makespan(Result) <= 12 and then
-                        Is_Valid_Schedule(Result));
+                        Is_Valid_Schedule(Result),
+                        "4 jobs with dependencies, makespan<=12");
    end;
 
    -- ========================================================================
    -- CATEGORY 4: Heterogeneous Machine Tests (HEFT)
    -- ========================================================================
+   New_Line;
    Put_Line("--- Category 4: Heterogeneous Machines (HEFT) ---");
+   Put_Line("Testing: Code optimizes for machine-specific speeds");
+   New_Line;
 
    -- Test 9: ASSUMPTION - HEFT might not choose fastest machine
    -- PROVING FALSE: HEFT assigns jobs to machine with earliest finish time
@@ -267,10 +297,11 @@ begin
       Durations_9(1, 2) := 5;
       
       Result := HEFT_Scheduling(DAG_9, Durations_9, 2);
-      Print_Test_Result("Test 9: HEFT chooses FASTEST machine (machine 2, not 1)",
+      Print_Test_Result("Test 9: HEFT chooses fastest machine (Machine 2)",
                         Result.Length = 1 and then
                         Result.First_Element.Machine = 2 and then
-                        Result.First_Element.End_Time = 5);
+                        Result.First_Element.End_Time = 5,
+                        "Job on Machine 2 (fast), finishes at 5");
    end;
 
    -- Test 10: ASSUMPTION - HEFT might not handle dependencies with heterogeneous speeds
@@ -296,17 +327,21 @@ begin
       
       Result := HEFT_Scheduling(DAG_10, Durations_10, 2);
       Makespan := Compute_Makespan(Result);
-      Print_Test_Result("Test 10: HEFT handles dependencies + heterogeneous speeds correctly",
+      Print_Test_Result("Test 10: HEFT handles dependencies + heterogeneous speeds",
                         Result.Length = 3 and then
                         Makespan > 0 and then
-                        Is_Valid_Schedule(Result));
+                        Is_Valid_Schedule(Result),
+                        "3 dependent jobs on heterogeneous machines");
    end;
 
    -- ========================================================================
    -- CATEGORY 5: Proving Assumptions FALSE (Negative Tests)
    -- These tests are EXPECTED to fail because they test false assumptions
    -- ========================================================================
+   New_Line;
    Put_Line("--- Category 5: Proving Assumptions FALSE ---");
+   Put_Line("Testing: These SHOULD fail to prove the assumptions are wrong");
+   New_Line;
 
    -- Test 11: FALSE ASSUMPTION - Basic scheduling is always optimal
    -- We PROVE this FALSE by showing LPT can produce better makespan
@@ -324,8 +359,11 @@ begin
       Makespan_LPT := Compute_Makespan(Result_LPT);
       
       -- This SHOULD FAIL because Basic scheduling is NOT always optimal
-      Print_Test_Result("Test 11: [EXPECTED FAIL] Basic is always optimal (FALSE - LPT is better)",
-                        Makespan_Basic <= Makespan_LPT);
+      Print_Test_Result("Test 11: [EXPECT FAIL] Basic is always optimal",
+                        Makespan_Basic <= Makespan_LPT,
+                        "Basic: " & Time_Type'Image(Makespan_Basic) & 
+                        ", LPT: " & Time_Type'Image(Makespan_LPT) & 
+                        " (LPT should be better)");
    end;
 
    -- Test 12: FALSE ASSUMPTION - LPT with 1 machine differs from Basic
@@ -344,8 +382,11 @@ begin
       Makespan_LPT := Compute_Makespan(Result_LPT);
       
       -- This SHOULD FAIL because with 1 machine, both algorithms produce same result
-      Print_Test_Result("Test 12: [EXPECTED FAIL] LPT differs from Basic on 1 machine (FALSE - they're equal)",
-                        Makespan_Basic /= Makespan_LPT);
+      Print_Test_Result("Test 12: [EXPECT FAIL] LPT differs from Basic on 1 machine",
+                        Makespan_Basic /= Makespan_LPT,
+                        "Basic: " & Time_Type'Image(Makespan_Basic) & 
+                        ", LPT: " & Time_Type'Image(Makespan_LPT) & 
+                        " (They should be equal)");
    end;
 
    -- Test 13: FALSE ASSUMPTION - Makespan can be less than longest job
@@ -359,14 +400,18 @@ begin
       Makespan := Compute_Makespan(Result);
       
       -- This SHOULD FAIL because makespan CANNOT be less than longest job
-      Print_Test_Result("Test 13: [EXPECTED FAIL] Makespan < longest job (FALSE - impossible)",
-                        Makespan < 8);
+      Print_Test_Result("Test 13: [EXPECT FAIL] Makespan < longest job (8)",
+                        Makespan < 8,
+                        "Makespan: " & Time_Type'Image(Makespan) & " (must be >= 8)");
    end;
 
    -- ========================================================================
    -- CATEGORY 6: Additional Correctness Tests
    -- ========================================================================
+   New_Line;
    Put_Line("--- Category 6: Additional Correctness Tests ---");
+   Put_Line("Testing: General correctness and validity");
+   New_Line;
 
    -- Test 14: All algorithms produce valid schedules
    declare
@@ -378,9 +423,10 @@ begin
       Result_Basic := Basic_List_Scheduling(Jobs_14, Durations_14, 3);
       Result_LPT := LPT_Scheduling(Durations_14, 3);
       
-      Print_Test_Result("Test 14: All algorithms produce valid schedules (no overlaps)",
+      Print_Test_Result("Test 14: All algorithms produce valid schedules",
                         Is_Valid_Schedule(Result_Basic) and then
-                        Is_Valid_Schedule(Result_LPT));
+                        Is_Valid_Schedule(Result_LPT),
+                        "Both Basic and LPT produce valid schedules");
    end;
 
    -- Test 15: LPT with uniform durations
@@ -391,13 +437,14 @@ begin
    begin
       Result := LPT_Scheduling(Jobs_15, 2);
       Makespan := Compute_Makespan(Result);
-      Print_Test_Result("Test 15: LPT with uniform durations produces balanced schedule",
+      Print_Test_Result("Test 15: LPT with uniform durations",
                         Result.Length = 3 and then
                         Makespan = 10 and then
-                        Is_Valid_Schedule(Result));
+                        Is_Valid_Schedule(Result),
+                        "3 jobs of duration 5 on 2 machines, makespan=10");
    end;
 
-   -- Test 16: HLF with no dependencies behaves like LPT
+   -- Test 16: HLF with no dependencies behaves correctly
    declare
       DAG_16 : DAG_Array(1 .. 3);
       Result : Schedule_List;
@@ -410,31 +457,38 @@ begin
       
       Result := HLF_Scheduling(DAG_16, 2);
       Makespan := Compute_Makespan(Result);
-      Print_Test_Result("Test 16: HLF with no dependencies works correctly",
+      Print_Test_Result("Test 16: HLF with no dependencies",
                         Result.Length = 3 and then
                         Makespan <= 13 and then
-                        Is_Valid_Schedule(Result));
+                        Is_Valid_Schedule(Result),
+                        "3 independent jobs on 2 machines");
    end;
 
    -- ========================================================================
    -- SUMMARY
    -- ========================================================================
    New_Line;
-   Put_Line("========================================");
-   Put_Line("  Test Summary");
-   Put_Line("========================================");
+   Put_Line("========================================================================");
+   Put_Line("  TEST SUMMARY");
+   Put_Line("========================================================================");
    Put("Total Tests: "); Put_Line(Natural'Image(Total_Tests));
    Put("Passed: "); Put_Line(Natural'Image(Passed_Tests));
    Put("Failed: "); Put_Line(Natural'Image(Failed_Tests));
    New_Line;
-   Put_Line("Expected failures: Tests 11, 12, 13 (proving false assumptions)");
-   Put_Line("If these fail, it means the code is working correctly!");
+   Put_Line("Expected failures (proving false assumptions):");
+   Put_Line("  - Test 11: Basic scheduling is NOT always optimal");
+   Put_Line("  - Test 12: LPT and Basic are EQUAL on 1 machine");
+   Put_Line("  - Test 13: Makespan CANNOT be less than longest job");
    New_Line;
-   if Failed_Tests > 0 then
-      Put_Line("Some tests failed - check if they are expected failures.");
+   if Failed_Tests = 3 then
+      Put_Line("✓ All expected failures occurred - code is working correctly!");
+   elsif Failed_Tests > 3 then
+      Put_Line("⚠ More failures than expected - check for bugs!");
+   elsif Failed_Tests < 3 then
+      Put_Line("⚠ Fewer failures than expected - some false assumptions may be true!");
    else
-      Put_Line("All tests passed successfully!");
+      Put_Line("✓ All tests passed!");
    end if;
-   Put_Line("========================================");
+   Put_Line("========================================================================");
 
 end Test_List_Scheduling;
